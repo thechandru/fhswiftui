@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "fhswiftui"
+  site-url: "https://thechandru.github.io/fhswiftui"
+  description: "SwiftUI inspired wrapper for FastHTML"
+  repo-branch: main
+  repo-url: "https://github.com/thechandru/fhswiftui"
