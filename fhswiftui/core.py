@@ -5,48 +5,30 @@
 # %% auto 0
 __all__ = ['bc_link', 'tw_scr', 'fh_swiftui_hdrs', 'IncludeColors', 'mk_previewer']
 
-# %% ../nbs/00_core.ipynb 7
+# %% ../nbs/00_core.ipynb 2
 from fastcore.utils import *
 from fasthtml.common import *
 import fasthtml.components as fh
 from fasthtml.jupyter import *
 
-# %% ../nbs/00_core.ipynb 8
+# %% ../nbs/00_core.ipynb 3
 def _def_colors():
     base = ["primary","secondary","accent","muted","card","popover"]
     return base+[f"{o}-foreground" for o in base]+["background","foreground","destructive","ring","input","border"]
     
 
-# %% ../nbs/00_core.ipynb 10
-# #| export
-# def IncludeColors(
-#     colors:list=None,  # List of additional Tailwind color names to include (e.g. ['red-500', 'blue-300'])
-#     append:bool=True,  # Append to default theme colors; set False to replace all defaults
-# ) -> Div:
-#     "Include additional colors that will be available via Tailwind utility classes on the page"
-#     from itertools import product
-#     if not colors: colors = []
-#     # Prefixes for color utilities: border sides (l,r,t,b), backgrounds, text, and borders
-#     pr = [f"border-{o}" for o in "lrtb"] + ["bg", "text", "border"]
-#     # Generate hidden div with all color class combinations to ensure they're included in build
-#     return Div(cls=f"hidden {' '.join(f'{p}-{c}' for p,c in product(pr, _def_colors() + colors if append else colors))}")
-
-# %% ../nbs/00_core.ipynb 13
+# %% ../nbs/00_core.ipynb 5
 def IncludeColors(
-    colors:list=None,  # Tailwind color names to include (e.g. ['red-500', 'blue-300', 'emerald-400'])
-    append:bool=True,  # If True, append to default theme colors; if False, replace all defaults
-) -> Div: # Hidden div element with color utility classes to ensure they're included in Tailwind build
+    colors:list=None,  # Additional Tailwind color names to include (e.g., ['red-500', 'blue-300'])
+    append:bool=True,  # Append to default theme colors; set `False` to replace all defaults
+): # Hidden div with color classes to ensure they're included in Tailwind's build
     "Include additional colors that will be available via Tailwind utility classes on the page"
     from itertools import product
     if not colors: colors = []
-    # Utility prefixes: border sides (l,r,t,b), backgrounds, text, and general borders
     pr = [f"border-{o}" for o in "lrtb"] + ["bg", "text", "border"]
-    # Combine prefixes with all colors (default theme colors + user colors, or just user colors)
-    all_colors = _def_colors() + colors if append else colors
-    # Generate hidden div with all color class combinations to force Tailwind to include them
-    return Div(cls=f"hidden {' '.join(f'{p}-{c}' for p,c in product(pr, all_colors))}")
+    return Div(cls=f"hidden {' '.join(f'{p}-{c}' for p,c in product(pr, _def_colors() + colors if append else colors))}")
 
-# %% ../nbs/00_core.ipynb 14
+# %% ../nbs/00_core.ipynb 6
 # enable basecoat and tailwind; add useful default colors
 bc_link = Link(rel='stylesheet', href='https://cdn.jsdelivr.net/npm/basecoat-css@latest/dist/basecoat.cdn.min.css')
 tw_scr = Script(src='https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4')
@@ -54,147 +36,138 @@ tw_scr = Script(src='https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4')
 fh_swiftui_hdrs = (bc_link,tw_scr,IncludeColors())
 
 
-# %% ../nbs/00_core.ipynb 16
-def mk_previewer(app=None,hdrs=None,cls=f'max-w-lg'):
+# %% ../nbs/00_core.ipynb 8
+def mk_previewer(
+    app=None,  # FastHTML app instance; defaults to app with fh_swiftui_hdrs
+    hdrs=None, # Custom headers (unused, kept for API compatibility)
+    cls:str='max-w-lg', # Tailwind max-width class (e.g., 'max-w-sm', 'max-w-xl', 'max-w-2xl')
+): # Returns a previewer function `p(*c, cls='', **kw)` for rendering components in an iframe
+    "Create a previewer function for rendering FastHTML components in iframes"
     xcls = cls
     if not app: app=FastHTML(hdrs=fh_swiftui_hdrs)
     def p(*c, cls='', **kw):
         return HTMX(Div(cls=f'{xcls} {cls}')(*c), app=app, host=None, port=None, **kw)
     return p
 
-# Based completely on: https://answerdotai.github.io/fhdaisy/core.html#mk_previewer
-
-# %% ../nbs/00_core.ipynb 22
+# %% ../nbs/00_core.ipynb 14
 @patch
 def append_classes(
-    self:FT, # the tag
-    *c       # list of classes
-):
+    self:FT, # FastTag element to modify
+    *c       # CSS class names to append
+): # Modified FastTag element with classes appended
     "Append css classes to the FastTag element"
     self.attrs["class"] = " ".join(f"{self.attrs.get('class','')} {' '.join(c)}".split())
     return self
 
-# %% ../nbs/00_core.ipynb 24
+# %% ../nbs/00_core.ipynb 16
 @patch
 def padding(
-    self:FT,     # The FastTag element to modify
-    **kw         # Padding values: 'all', 'top', 'bottom', 'left', 'right' (Tailwind spacing scale: 0, 1, 2, 4, 8, px, or custom like '[5px]')
-):
+    self:FT, # FastTag element to modify
+    **kw,    # Padding values: 'all', 'top', 'bottom', 'left', 'right'. Values use Tailwind spacing (0-96, px, or '[<custom>]')
+): # Modified FastTag with padding classes appended
     "Add padding around the content within the element's bounds. Defaults to p-4 if no arguments provided."
     d = {"top":'t', "bottom":'b', "left":'l', "right":'r'}
     c = [f"p-{kw['all']}"] if "all" in kw else [f"p{d[k]}-{kw[k]}" for k in set(kw) & d.keys()]
     return self.append_classes(*c if c else ["p-4"])
 
-# %% ../nbs/00_core.ipynb 33
+# %% ../nbs/00_core.ipynb 25
 @patch
 def margin(
-    self:FT,        # The FastTag element to modify
-    **kw            # Margin values: 'all', 'top', 'bottom', 'left', 'right' (Tailwind spacing scale: 0, 1, 2, 4, 8, px, or custom like '[5px]')
-):
-    "set margins - space outside the component"
-    d = {"top":'t',"bottom":'b',"left":'l',"right":'r'}
+    self:FT, # FastTag element to modify
+    **kw,    # Margin values: 'all', 'top', 'bottom', 'left', 'right'. Values use Tailwind spacing (0-96, auto, px, or '[<custom>]')
+): # Modified FastTag with margin classes appended
+    "Add margin (space outside) to the element. Defaults to m-4 if no arguments provided."
+    d = {"top":'t', "bottom":'b', "left":'l', "right":'r'}
     c = [f"m-{kw['all']}"] if "all" in kw else [f"m{d[k]}-{kw[k]}" for k in set(kw) & d.keys()]
+    return self.append_classes(*c if c else ["m-4"])
 
-    self.append_classes(*c if c else ["m-4"])
-
-    return self
-
-# %% ../nbs/00_core.ipynb 39
+# %% ../nbs/00_core.ipynb 31
 @patch
 def border(
-    self:FT,         # The FastTag element to modify
-    width:int=None,  # Border width in Tailwind scale (1, 2, 4, 8) or None for default width
-    color:str=None   # Tailwind border color without 'border-' prefix (e.g., 'primary', 'muted', 'gray-300', 'red-500')
-):
+    self:FT,        # FastTag element to modify
+    width:int=None, # Border width as integer (0, 2, 4, 8, etc.) producing border-<width> class
+    color:str=None, # Border color without 'border-' prefix (e.g., 'primary', 'muted', 'gray-300')
+): # Modified FastTag with border classes appended
     "Add a border around the element with optional width and color customization"
     c = ["border"]
     if width: c.append(f"border-{width}")
     if color: c.append(f"border-{color}")
     return self.append_classes(*c)
 
-# %% ../nbs/00_core.ipynb 46
+# %% ../nbs/00_core.ipynb 38
 @patch
 def corner_radius(
-    self:FT,        # The FastTag element to modify
-    size:str=None     # Tailwind size suffix (e.g. sm, lg, full)
-):   
-    "Round the corners for this element"
+    self:FT,       # FastTag element to modify
+    size:str=None, # Tailwind size suffix: 'xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', '4xl', 'none', 'full', or '[<custom>]'
+): # Modified FastTag with rounded corner class appended
+    "Round the corners of this element. Defaults to 'rounded' (base radius) if no size provided."
     return self.append_classes(f"rounded-{size}" if size else "rounded")
 
+# %% ../nbs/00_core.ipynb 46
+@patch
+def bg(
+    self:FT,  # FastTag element to modify
+    color:str, # Tailwind color (e.g., 'primary', 'muted', 'blue-500', 'red-300', or theme colors like 'background')
+): # Modified FastTag with background color class appended
+    "Set background color using Tailwind bg-<color> utility class"
+    return self.append_classes(f"bg-{color}")
+
+# %% ../nbs/00_core.ipynb 47
+@patch
+def fg(
+    self:FT,   # FastTag element to modify
+    color:str, # Tailwind color (e.g., 'primary', 'muted', 'blue-500', 'red-300', or theme colors like 'foreground')
+): # Modified FastTag with text color class appended
+    "Set foreground (text) color using Tailwind text-<color> utility class"
+    return self.append_classes(f"text-{color}")
 
 # %% ../nbs/00_core.ipynb 54
 @patch
-def bg(
-    self:FT,        # The FastTag element to modify
-    color:str       # color of background
-): 
-    "Set background color"
-    return self.append_classes(f"bg-{color}")
-
-# %% ../nbs/00_core.ipynb 55
-@patch
-def fg(
-    self:FT,        # The FastTag element to modify
-    color:str       # color of foreground
-): 
-    "Set foreground color"
-    return self.append_classes(f"text-{color}")
-
-# %% ../nbs/00_core.ipynb 62
-@patch
 def shadow(
-    self:FT,    # The FastTag element to modify
-    **kw
-):
-    "Add shadow to element"
-    # Parameters:
-    # color: shadow color (default 'rgba(0,0,0,0.1)')
-    # size: preset size ('sm','md','lg', etc)
-    # x,y,blur,spread: offset x, offset y, blur, spread
+    self:FT, # FastTag element to modify
+    **kw,    # Shadow options: 'size' (2xs/xs/sm/md/lg/xl/2xl/none), 'color' (CSS color), 'x'/'y'/'blur'/'spread' (int px offsets)
+): # Modified FastTag with shadow class appended
+    "Add shadow to element. Use 'size' for presets, or 'x'/'y'/'blur'/'spread'/'color' for custom shadows."
     if "color" not in kw: kw["color"] = "rgba(0,0,0,0.1)"
-    
-    if len(kw) == 0: return self.append_classes("shadow")
+    if len(kw) == 1 and "color" in kw: return self.append_classes("shadow")
     if "size" in kw: return self.append_classes(f"shadow-{kw['size']}")
-    
-    def enc(color,x=0,y=1,blur=3,spread=0,**k2): return f"shadow-[{x}px_{y}px_{blur}px_{spread}px_{color}]"
+    def enc(color, x=0, y=1, blur=3, spread=0, **k2): return f"shadow-[{x}px_{y}px_{blur}px_{spread}px_{color}]"
     return self.append_classes(enc(**kw))
+
+# %% ../nbs/00_core.ipynb 61
+@patch
+def opacity(
+    self:FT,    # FastTag element to modify
+    pct:int=100, # Opacity percentage (0, 5, 10, 15, 20, 25, 30, ..., 95, 100, or '[<custom>]' as string)
+): # Modified FastTag with opacity class appended
+    "Set element opacity using Tailwind opacity-<pct> utility class"
+    return self.append_classes(f"opacity-{pct}")
 
 # %% ../nbs/00_core.ipynb 69
 @patch
-def opacity(
-    self:FT,        # The FastTag element to modify
-    pct:int=100     # Percent value of opacity as int
-):
-    "set opacity"
-    return self.append_classes(f"opacity-{pct}")
-
-# %% ../nbs/00_core.ipynb 77
-@patch
 def frame(
-    self:FT,            # The FastTag element to modify 
-    w=None,             # height of frame
-    h=None,             # width of frame
-    halign="center",    # horizontal alignment (default: center)
-    valign="center"     # vertical alignment (default: center)
-):
-    "position this element in a frame"
+    self:FT,           # FastTag element to wrap in a frame
+    w=None,            # Frame width: number (0-96), container size (xs-7xl), 'full', 'screen', 'auto', fraction, or '[<custom>]'
+    h=None,            # Frame height: number (0-96), container size (xs-7xl), 'full', 'screen', 'auto', fraction, or '[<custom>]'
+    halign:str="center", # Horizontal alignment: 'leading', 'center', 'trailing'
+    valign:str="center", # Vertical alignment: 'top', 'center', 'bottom'
+): # Div wrapping self with flex alignment and optional size classes
+    "Position this element within a flex frame with optional sizing and alignment"
     h_map = {"leading": "justify-start", "center": "justify-center", "trailing": "justify-end"}
     v_map = {"top": "items-start", "center": "items-center", "bottom": "items-end"}
-    
     c = ["flex", h_map[halign], v_map[valign]]
     if w: c.append(f"w-{w}")
     if h: c.append(f"h-{h}")
-    
     return Div(self).append_classes(*c)
 
-# %% ../nbs/00_core.ipynb 86
+# %% ../nbs/00_core.ipynb 78
 @patch
 def font(
-    self:FT,        # The FastTag element to modify 
-    size=None,      # size (e.g. sm, lg, xl, 2xl)
-    weight=None     # weight (e.g. light, normal, bold)
-):
-    "Set default font for this tag"
+    self:FT,       # FastTag element to modify
+    size:str=None, # Font size: 'xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl', '7xl', '8xl', '9xl', or '[<custom>]'
+    weight:str=None, # Font weight: 'thin', 'extralight', 'light', 'normal', 'medium', 'semibold', 'bold', 'extrabold', 'black', or '[<custom>]'
+): # Modified FastTag with font size and/or weight classes appended
+    "Set font size and/or weight using Tailwind text-<size> and font-<weight> utility classes"
     c = []
     if size: c.append(f"text-{size}")
     if weight: c.append(f"font-{weight}")
