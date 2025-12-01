@@ -17,5 +17,7 @@ d = { 'settings': { 'branch': 'main',
                                 'fhswiftui.core.FT.padding': ('core.html#ft.padding', 'fhswiftui/core.py'),
                                 'fhswiftui.core.FT.shadow': ('core.html#ft.shadow', 'fhswiftui/core.py'),
                                 'fhswiftui.core.IncludeColors': ('core.html#includecolors', 'fhswiftui/core.py'),
+                                'fhswiftui.core.Spacer': ('core.html#spacer', 'fhswiftui/core.py'),
+                                'fhswiftui.core._axial': ('core.html#_axial', 'fhswiftui/core.py'),
                                 'fhswiftui.core._def_colors': ('core.html#_def_colors', 'fhswiftui/core.py'),
                                 'fhswiftui.core.mk_previewer': ('core.html#mk_previewer', 'fhswiftui/core.py')}}}
