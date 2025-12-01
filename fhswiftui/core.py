@@ -5,44 +5,48 @@
 # %% auto 0
 __all__ = ['bc_link', 'tw_scr', 'fh_swiftui_hdrs', 'IncludeColors', 'mk_previewer']
 
-# %% ../nbs/00_core.ipynb 8
+# %% ../nbs/00_core.ipynb 7
 from fastcore.utils import *
 from fasthtml.common import *
 import fasthtml.components as fh
 from fasthtml.jupyter import *
 
-# %% ../nbs/00_core.ipynb 9
+# %% ../nbs/00_core.ipynb 8
 def _def_colors():
     base = ["primary","secondary","accent","muted","card","popover"]
     return base+[f"{o}-foreground" for o in base]+["background","foreground","destructive","ring","input","border"]
     
 
-# %% ../nbs/00_core.ipynb 11
+# %% ../nbs/00_core.ipynb 10
+# #| export
+# def IncludeColors(
+#     colors:list=None,  # List of additional Tailwind color names to include (e.g. ['red-500', 'blue-300'])
+#     append:bool=True,  # Append to default theme colors; set False to replace all defaults
+# ) -> Div:
+#     "Include additional colors that will be available via Tailwind utility classes on the page"
+#     from itertools import product
+#     if not colors: colors = []
+#     # Prefixes for color utilities: border sides (l,r,t,b), backgrounds, text, and borders
+#     pr = [f"border-{o}" for o in "lrtb"] + ["bg", "text", "border"]
+#     # Generate hidden div with all color class combinations to ensure they're included in build
+#     return Div(cls=f"hidden {' '.join(f'{p}-{c}' for p,c in product(pr, _def_colors() + colors if append else colors))}")
+
+# %% ../nbs/00_core.ipynb 13
 def IncludeColors(
-    colors:list=None,  # List of additional Tailwind color names to include (e.g. ['red-500', 'blue-300'])
-    append:bool=True,  # Append to default theme colors; set False to replace all defaults
-) -> Div:
+    colors:list=None,  # Tailwind color names to include (e.g. ['red-500', 'blue-300', 'emerald-400'])
+    append:bool=True,  # If True, append to default theme colors; if False, replace all defaults
+) -> Div: # Hidden div element with color utility classes to ensure they're included in Tailwind build
     "Include additional colors that will be available via Tailwind utility classes on the page"
     from itertools import product
     if not colors: colors = []
-    # Prefixes for color utilities: border sides (l,r,t,b), backgrounds, text, and borders
+    # Utility prefixes: border sides (l,r,t,b), backgrounds, text, and general borders
     pr = [f"border-{o}" for o in "lrtb"] + ["bg", "text", "border"]
-    # Generate hidden div with all color class combinations to ensure they're included in build
-    return Div(cls=f"hidden {' '.join(f'{p}-{c}' for p,c in product(pr, _def_colors() + colors if append else colors))}")
+    # Combine prefixes with all colors (default theme colors + user colors, or just user colors)
+    all_colors = _def_colors() + colors if append else colors
+    # Generate hidden div with all color class combinations to force Tailwind to include them
+    return Div(cls=f"hidden {' '.join(f'{p}-{c}' for p,c in product(pr, all_colors))}")
 
-# %% ../nbs/00_core.ipynb 12
-# def IncludeColors(
-#     colors=None,    # list of additional tailwind colors to include
-#     append=True     # set False to replace all defaults
-# ):
-#     "Include additional colors that wil be used in the page"
-#     from itertools import product
-#     if not colors: colors = []
-#     pr = [f"border-{o}" for o in "lrtb"] + ["bg","text","border"]
-#     
-#     return Div(cls=f"hidden {' '.join(f'{p}-{c}' for p,c in product(pr,_def_colors() + colors if append else colors))}")
-
-# %% ../nbs/00_core.ipynb 13
+# %% ../nbs/00_core.ipynb 14
 # enable basecoat and tailwind; add useful default colors
 bc_link = Link(rel='stylesheet', href='https://cdn.jsdelivr.net/npm/basecoat-css@latest/dist/basecoat.cdn.min.css')
 tw_scr = Script(src='https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4')
@@ -50,7 +54,7 @@ tw_scr = Script(src='https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4')
 fh_swiftui_hdrs = (bc_link,tw_scr,IncludeColors())
 
 
-# %% ../nbs/00_core.ipynb 15
+# %% ../nbs/00_core.ipynb 16
 def mk_previewer(app=None,hdrs=None,cls=f'max-w-lg'):
     xcls = cls
     if not app: app=FastHTML(hdrs=fh_swiftui_hdrs)
@@ -60,7 +64,7 @@ def mk_previewer(app=None,hdrs=None,cls=f'max-w-lg'):
 
 # Based completely on: https://answerdotai.github.io/fhdaisy/core.html#mk_previewer
 
-# %% ../nbs/00_core.ipynb 21
+# %% ../nbs/00_core.ipynb 22
 @patch
 def append_classes(
     self:FT, # the tag
@@ -70,7 +74,7 @@ def append_classes(
     self.attrs["class"] = " ".join(f"{self.attrs.get('class','')} {' '.join(c)}".split())
     return self
 
-# %% ../nbs/00_core.ipynb 23
+# %% ../nbs/00_core.ipynb 24
 @patch
 def padding(
     self:FT,     # The FastTag element to modify
@@ -81,7 +85,7 @@ def padding(
     c = [f"p-{kw['all']}"] if "all" in kw else [f"p{d[k]}-{kw[k]}" for k in set(kw) & d.keys()]
     return self.append_classes(*c if c else ["p-4"])
 
-# %% ../nbs/00_core.ipynb 32
+# %% ../nbs/00_core.ipynb 33
 @patch
 def margin(
     self:FT,        # The FastTag element to modify
@@ -95,7 +99,7 @@ def margin(
 
     return self
 
-# %% ../nbs/00_core.ipynb 38
+# %% ../nbs/00_core.ipynb 39
 @patch
 def border(
     self:FT,         # The FastTag element to modify
@@ -108,7 +112,7 @@ def border(
     if color: c.append(f"border-{color}")
     return self.append_classes(*c)
 
-# %% ../nbs/00_core.ipynb 45
+# %% ../nbs/00_core.ipynb 46
 @patch
 def corner_radius(
     self:FT,        # The FastTag element to modify
@@ -118,7 +122,7 @@ def corner_radius(
     return self.append_classes(f"rounded-{size}" if size else "rounded")
 
 
-# %% ../nbs/00_core.ipynb 53
+# %% ../nbs/00_core.ipynb 54
 @patch
 def bg(
     self:FT,        # The FastTag element to modify
@@ -127,7 +131,7 @@ def bg(
     "Set background color"
     return self.append_classes(f"bg-{color}")
 
-# %% ../nbs/00_core.ipynb 54
+# %% ../nbs/00_core.ipynb 55
 @patch
 def fg(
     self:FT,        # The FastTag element to modify
@@ -136,7 +140,7 @@ def fg(
     "Set foreground color"
     return self.append_classes(f"text-{color}")
 
-# %% ../nbs/00_core.ipynb 61
+# %% ../nbs/00_core.ipynb 62
 @patch
 def shadow(
     self:FT,    # The FastTag element to modify
@@ -155,7 +159,7 @@ def shadow(
     def enc(color,x=0,y=1,blur=3,spread=0,**k2): return f"shadow-[{x}px_{y}px_{blur}px_{spread}px_{color}]"
     return self.append_classes(enc(**kw))
 
-# %% ../nbs/00_core.ipynb 68
+# %% ../nbs/00_core.ipynb 69
 @patch
 def opacity(
     self:FT,        # The FastTag element to modify
@@ -164,7 +168,7 @@ def opacity(
     "set opacity"
     return self.append_classes(f"opacity-{pct}")
 
-# %% ../nbs/00_core.ipynb 76
+# %% ../nbs/00_core.ipynb 77
 @patch
 def frame(
     self:FT,            # The FastTag element to modify 
@@ -183,7 +187,7 @@ def frame(
     
     return Div(self).append_classes(*c)
 
-# %% ../nbs/00_core.ipynb 85
+# %% ../nbs/00_core.ipynb 86
 @patch
 def font(
     self:FT,        # The FastTag element to modify 
