@@ -18,7 +18,7 @@ def _def_colors():
     return base+[f"{o}-foreground" for o in base]+["background","foreground","destructive","ring","input","border"]
     
 
-# %% ../nbs/00_core.ipynb 6
+# %% ../nbs/00_core.ipynb 5
 def IncludeColors(
     colors:list=None,  # Additional Tailwind color names to include (e.g., ['red-500', 'blue-300'])
     append:bool=True,  # Append to default theme colors; set `False` to replace all defaults
@@ -29,7 +29,7 @@ def IncludeColors(
     pr = [f"border-{o}" for o in "lrtb"] + ["bg", "text", "border"]
     return Div(cls=f"hidden {' '.join(f'{p}-{c}' for p,c in product(pr, _def_colors() + colors if append else colors))}")
 
-# %% ../nbs/00_core.ipynb 7
+# %% ../nbs/00_core.ipynb 6
 # enable basecoat and tailwind; add useful default colors
 bc_link = Link(rel='stylesheet', href='https://cdn.jsdelivr.net/npm/basecoat-css@latest/dist/basecoat.cdn.min.css')
 tw_scr = Script(src='https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4')
@@ -37,7 +37,7 @@ tw_scr = Script(src='https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4')
 fh_swiftui_hdrs = (bc_link,tw_scr,IncludeColors())
 
 
-# %% ../nbs/00_core.ipynb 9
+# %% ../nbs/00_core.ipynb 8
 def mk_previewer(
     app=None,  # FastHTML app instance; defaults to app with fh_swiftui_hdrs
     hdrs=None, # Custom headers (unused, kept for API compatibility)
@@ -50,7 +50,7 @@ def mk_previewer(
         return HTMX(Div(cls=f'{xcls} {cls}')(*c), app=app, host=None, port=None, **kw)
     return p
 
-# %% ../nbs/00_core.ipynb 16
+# %% ../nbs/00_core.ipynb 14
 @patch
 def append_classes(
     self:FT, # FastTag element to modify
@@ -60,7 +60,7 @@ def append_classes(
     self.attrs["class"] = " ".join(f"{self.attrs.get('class','')} {' '.join(c)}".split())
     return self
 
-# %% ../nbs/00_core.ipynb 18
+# %% ../nbs/00_core.ipynb 15
 @patch
 def padding(
     self:FT, # FastTag element to modify
@@ -71,7 +71,7 @@ def padding(
     c = [f"p-{kw['all']}"] if "all" in kw else [f"p{d[k]}-{kw[k]}" for k in set(kw) & d.keys()]
     return self.append_classes(*c if c else ["p-4"])
 
-# %% ../nbs/00_core.ipynb 24
+# %% ../nbs/00_core.ipynb 20
 @patch
 def margin(
     self:FT, # FastTag element to modify
@@ -82,7 +82,7 @@ def margin(
     c = [f"m-{kw['all']}"] if "all" in kw else [f"m{d[k]}-{kw[k]}" for k in set(kw) & d.keys()]
     return self.append_classes(*c if c else ["m-4"])
 
-# %% ../nbs/00_core.ipynb 30
+# %% ../nbs/00_core.ipynb 25
 @patch
 def border(
     self:FT,        # FastTag element to modify
@@ -95,7 +95,7 @@ def border(
     if color: c.append(f"border-{color}")
     return self.append_classes(*c)
 
-# %% ../nbs/00_core.ipynb 37
+# %% ../nbs/00_core.ipynb 31
 @patch
 def corner_radius(
     self:FT,       # FastTag element to modify
@@ -104,7 +104,7 @@ def corner_radius(
     "Round the corners of this element. Defaults to 'rounded' (base radius) if no size provided."
     return self.append_classes(f"rounded-{size}" if size else "rounded")
 
-# %% ../nbs/00_core.ipynb 45
+# %% ../nbs/00_core.ipynb 38
 @patch
 def bg(
     self:FT,  # FastTag element to modify
@@ -113,7 +113,7 @@ def bg(
     "Set background color using Tailwind bg-<color> utility class"
     return self.append_classes(f"bg-{color}")
 
-# %% ../nbs/00_core.ipynb 46
+# %% ../nbs/00_core.ipynb 39
 @patch
 def fg(
     self:FT,   # FastTag element to modify
@@ -122,7 +122,7 @@ def fg(
     "Set foreground (text) color using Tailwind text-<color> utility class"
     return self.append_classes(f"text-{color}")
 
-# %% ../nbs/00_core.ipynb 53
+# %% ../nbs/00_core.ipynb 45
 @patch
 def shadow(
     self:FT, # FastTag element to modify
@@ -135,7 +135,7 @@ def shadow(
     def enc(color, x=0, y=1, blur=3, spread=0, **k2): return f"shadow-[{x}px_{y}px_{blur}px_{spread}px_{color}]"
     return self.append_classes(enc(**kw))
 
-# %% ../nbs/00_core.ipynb 60
+# %% ../nbs/00_core.ipynb 51
 @patch
 def opacity(
     self:FT,    # FastTag element to modify
@@ -144,7 +144,7 @@ def opacity(
     "Set element opacity using Tailwind opacity-<pct> utility class"
     return self.append_classes(f"opacity-{pct}")
 
-# %% ../nbs/00_core.ipynb 68
+# %% ../nbs/00_core.ipynb 58
 @patch
 def frame(
     self:FT,           # FastTag element to wrap in a frame
@@ -161,7 +161,7 @@ def frame(
     if h: c.append(f"h-{h}")
     return Div(self).append_classes(*c)
 
-# %% ../nbs/00_core.ipynb 77
+# %% ../nbs/00_core.ipynb 66
 @patch
 def font(
     self:FT,       # FastTag element to modify
@@ -174,12 +174,12 @@ def font(
     if weight: c.append(f"font-{weight}")
     return self.append_classes(*c)
 
-# %% ../nbs/00_core.ipynb 90
+# %% ../nbs/00_core.ipynb 79
 def _axial(alignment, spacing, axis): 
     def fn(*c): return Div(cls=f"flex flex-{axis} items-{alignment} gap-{spacing}")(*c)
     return fn
 
-# %% ../nbs/00_core.ipynb 92
+# %% ../nbs/00_core.ipynb 80
 def HStack(
     *c,                # Child elements to arrange horizontally
     spacing=2,         # Gap between items (Tailwind spacing: 0, 0.5, 1, ..., 96, px, or '[<custom>]')
@@ -189,7 +189,7 @@ def HStack(
     fn = _axial(alignment, spacing, "row")
     return fn(*c) if c else fn
 
-# %% ../nbs/00_core.ipynb 98
+# %% ../nbs/00_core.ipynb 85
 def VStack(
     *c,                # Child elements to arrange vertically
     spacing=2,         # Gap between items (Tailwind spacing: 0, 0.5, 1, 1.5, 2, ..., 96, px, or '[<custom>]')
@@ -199,18 +199,18 @@ def VStack(
     fn = _axial(alignment, spacing, "col")
     return fn(*c) if c else fn
 
-# %% ../nbs/00_core.ipynb 104
+# %% ../nbs/00_core.ipynb 90
 def Spacer():
     "A flexible space that expands along the major axis of its containing stack layout"
     return Div(cls="flex-grow")
 
-# %% ../nbs/00_core.ipynb 110
+# %% ../nbs/00_core.ipynb 95
 def HDivider(
 ): # Div element styled as a horizontal divider with top border and vertical margin
     "A horizontal line that visually separates content within a vertical stack layout"
     return Div(cls="border-t w-full my-2")
 
-# %% ../nbs/00_core.ipynb 114
+# %% ../nbs/00_core.ipynb 99
 def VDivider(
     color:str="muted", # Border color without 'border-l-' prefix (e.g., 'muted', 'gray-300', 'blue-500')
 ): # Div element styled as a vertical divider with left border and horizontal margin
